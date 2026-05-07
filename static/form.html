@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lead Qualification — AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0A0A0A;
+      --card:       #141414;
+      --inner:      #1A1A1A;
+      --border:     #2A2A2A;
+      --text-1:     #FAFAFA;
+      --text-2:     #888888;
+      --text-3:     #666666;
+      --body:       #BBBBBB;
+      --body-lt:    #DDDDDD;
+      --hot:        #E24B4A;
+      --warm:       #BA7517;
+      --cold:       #378ADD;
+      --green:      #10B981;
+      --ease:       cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    html { height: 100%; }
+
+    body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text-1);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      justify-content: center;
+      padding: 2.5rem 1rem 5rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 560px;
+    }
+
+    /* ─── Header ─────────────────────────────── */
+
+    .hdr {
+      padding-bottom: 1.75rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.75rem;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .pulse {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulse {
+      0%   { box-shadow: 0 0 0 0   rgba(16,185,129,.75); }
+      70%  { box-shadow: 0 0 0 5px rgba(16,185,129,0);   }
+      100% { box-shadow: 0 0 0 0   rgba(16,185,129,0);   }
+    }
+
+    .live-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--text-3);
+    }
+
+    .hdr h2 {
+      font-size: 24px;
+      font-weight: 500;
+      letter-spacing: -.015em;
+      margin-bottom: 4px;
+    }
+
+    .hdr p {
+      font-size: 13px;
+      color: var(--text-2);
+    }
+
+    /* ─── Form card ──────────────────────────── */
+
+    .form-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .field { margin-bottom: 1rem; }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 1rem;
+    }
+
+    .two-col .field { margin-bottom: 0; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-2);
+      margin-bottom: 6px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-1);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 400;
+      outline: none;
+      transition: border-color .2s var(--ease);
+    }
+
+    input::placeholder, textarea::placeholder { color: var(--text-3); }
+    input:focus,        textarea:focus        { border-color: var(--text-1); }
+
+    textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+
+    .submit-btn {
+      width: 100%;
+      padding: 11px;
+      margin-top: 4px;
+      background: var(--text-1);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity .2s var(--ease), transform .15s var(--ease);
+    }
+
+    .submit-btn:hover:not(:disabled) { opacity: .88; }
+    .submit-btn:active:not(:disabled) { transform: scale(.99); }
+    .submit-btn:disabled { opacity: .38; cursor: not-allowed; }
+
+    /* ─── Result section ─────────────────────── */
+
+    #results { margin-top: 1.25rem; }
+
+    /* Main result card */
+    .res-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .res-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.5rem;
+      padding: 1.5rem;
+    }
+
+    /* Score ring */
+    .ring-wrap {
+      flex-shrink: 0;
+    }
+
+    /* Classification */
+    .classify {
+      flex: 1;
+      min-width: 0;
+      transition: opacity .4s var(--ease);
+    }
+
+    .lbl {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 6px;
+    }
+
+    .tier {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 12px;
+      transition: color .4s var(--ease);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .stat {
+      background: var(--inner);
+      border-radius: 6px;
+      padding: 8px 10px;
+      transition: opacity .3s var(--ease);
+    }
+
+    .stat-name {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 4px;
+    }
+
+    .stat-val {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-2);
+      transition: color .3s var(--ease);
+    }
+
+    /* Reasoning trace */
+    .trace-wrap {
+      border-top: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+    }
+
+    .trace {
+      font-family: 'SF Mono', 'Consolas', 'Menlo', 'Monaco', monospace;
+      font-size: 11px;
+      line-height: 1.75;
+      color: var(--body);
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin-top: 8px;
+    }
+
+    /* Email card */
+    .email-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: opacity .5s var(--ease);
+    }
+
+    .email-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .email-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .email-title .lbl { margin-bottom: 0; }
+
+    .badge {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--green);
+      background: rgba(16,185,129,.1);
+      border: 1px solid rgba(16,185,129,.2);
+      border-radius: 4px;
+      padding: 2px 6px;
+    }
+
+    .copy-btn {
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-2);
+      background: var(--inner);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: color .2s var(--ease), border-color .2s var(--ease);
+    }
+
+    .copy-btn:hover { color: var(--text-1); border-color: #444; }
+
+    .email-body {
+      padding: 1.25rem 1.5rem;
+      font-size: 13px;
+      line-height: 1.8;
+      color: var(--body-lt);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* ─── Mobile ─────────────────────────────── */
+
+    @media (max-width: 600px) {
+      .two-col { grid-template-columns: 1fr; }
+      .res-top { flex-direction: column; align-items: center; }
+      .classify { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <header class="hdr">
+    <div class="live-badge">
+      <span class="pulse"></span>
+      <span class="live-label">Claude Sonnet 4.5 · Live</span>
+    </div>
+    <h2>Lead qualification</h2>
+    <p>AI analysis with explainable scoring</p>
+  </header>
+
+  <!-- Form -->
+  <div class="form-card">
+    <form id="leadForm">
+      <div class="field">
+        <label for="f-name">Name</label>
+        <input id="f-name" name="name" type="text" required placeholder="Jane Smith" autocomplete="name" />
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label for="f-email">Email</label>
+          <input id="f-email" name="email" type="email" required placeholder="jane@company.com" autocomplete="email" />
+        </div>
+        <div class="field">
+          <label for="f-phone">Phone</label>
+          <input id="f-phone" name="phone" type="tel" placeholder="555-0123" autocomplete="tel" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-company">Company</label>
+        <input id="f-company" name="company" type="text" required placeholder="Acme Corp" autocomplete="organization" />
+      </div>
+      <div class="field">
+        <label for="f-msg">Message</label>
+        <textarea id="f-msg" name="message" required placeholder="Describe your challenge or use case…"></textarea>
+      </div>
+      <button type="submit" id="submitBtn" class="submit-btn">Analyze with AI →</button>
+    </form>
+  </div>
+
+  <!-- Results -->
+  <section id="results" style="display:none">
+
+    <!-- Score + classification card -->
+    <div class="res-card">
+      <div class="res-top">
+
+        <!-- SVG ring -->
+        <div class="ring-wrap">
+          <svg width="100" height="100" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+            <circle cx="50" cy="50" r="40" stroke="#2A2A2A" stroke-width="5"/>
+            <circle
+              id="ringProgress"
+              cx="50" cy="50" r="40"
+              stroke="#E24B4A"
+              stroke-width="5"
+              stroke-linecap="round"
+              stroke-dasharray="251.33"
+              stroke-dashoffset="251.33"
+              transform="rotate(-90 50 50)"
+            />
+            <text
+              id="ringNum"
+              x="50" y="47"
+              text-anchor="middle"
+              dominant-baseline="middle"
+              fill="#FAFAFA"
+              font-size="21"
+              font-weight="500"
+              font-family="Inter, system-ui, sans-serif"
+            >0</text>
+            <text
+              x="50" y="63"
+              text-anchor="middle"
+              fill="#666"
+              font-size="7.5"
+              font-weight="500"
+              font-family="Inter, system-ui, sans-serif"
+              letter-spacing="1.5"
+            >SCORE</text>
+          </svg>
+        </div>
+
+        <!-- Classification + stats -->
+        <div id="classify" class="classify" style="opacity:0">
+          <div class="lbl">Classification</div>
+          <div id="tierName" class="tier">—</div>
+          <div class="stats">
+            <div id="intentCard" class="stat" style="opacity:0">
+              <div class="stat-name">Intent</div>
+              <div id="intentVal" class="stat-val">—</div>
+            </div>
+            <div id="urgencyCard" class="stat" style="opacity:0">
+              <div class="stat-name">Urgency</div>
+              <div id="urgencyVal" class="stat-val">—</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Reasoning trace -->
+      <div class="trace-wrap">
+        <div class="lbl">Reasoning trace</div>
+        <pre id="trace" class="trace"></pre>
+      </div>
+    </div>
+
+    <!-- Email card -->
+    <div id="emailCard" class="email-card" style="display:none;opacity:0">
+      <div class="email-hdr">
+        <div class="email-title">
+          <span class="lbl">Drafted reply</span>
+          <span class="badge">Personalized</span>
+        </div>
+        <button id="copyBtn" class="copy-btn" type="button">Copy</button>
+      </div>
+      <div id="emailBody" class="email-body"></div>
+    </div>
+
+  </section>
+</div>
+
+<script>
+  const C = 2 * Math.PI * 40; // SVG ring circumference ≈ 251.33
+
+  const TIER_COLOR = { Hot: '#E24B4A', Warm: '#BA7517', Cold: '#378ADD' };
+
+  const WAIT_LINES = [
+    'Parsing lead submission…',
+    'Evaluating message for buying signals…',
+    'Assessing role and authority indicators…',
+    'Checking budget and timeline markers…',
+    'Calibrating urgency level…',
+    'Computing qualification score…',
+    'Generating personalized analysis…',
+  ];
+
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  function deriveIntent(score) {
+    if (score >= 70) return { label: 'High',   color: '#10B981' };
+    if (score >= 40) return { label: 'Medium', color: '#BA7517' };
+    return               { label: 'Low',    color: '#666666' };
+  }
+
+  function deriveUrgency(msg) {
+    const m = (msg || '').toLowerCase();
+    if (/urgent|asap|immediately|right away|today|this week|\bnow\b|30.?day|next week/.test(m))
+      return { label: 'Urgent', color: '#E24B4A' };
+    if (/soon|this month|next month|few weeks|quarter|couple.{0,6}month/.test(m))
+      return { label: 'Soon',   color: '#BA7517' };
+    return   { label: 'Later',  color: '#666666' };
+  }
+
+  async function typeLines(el, lines, msChar, msBetween) {
+    for (const line of lines.filter(Boolean)) {
+      for (const ch of line) { el.textContent += ch; await sleep(msChar); }
+      el.textContent += '\n';
+      await sleep(msBetween);
+    }
+  }
+
+  async function typeText(el, text, msChar) {
+    for (const ch of text) { el.textContent += ch; await sleep(msChar); }
+  }
+
+  function animateRing(ring, score, color, dur) {
+    const t0 = performance.now();
+    const target = C * (1 - score / 100);
+    ring.style.stroke = color;
+    function tick(now) {
+      const t = Math.min((now - t0) / dur, 1);
+      const e = 1 - Math.pow(1 - t, 3);
+      ring.style.strokeDashoffset = C * (1 - e * score / 100);
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function animateCount(el, target, dur) {
+    const t0 = performance.now();
+    function tick(now) {
+      const t = Math.min((now - t0) / dur, 1);
+      const e = 1 - Math.pow(1 - t, 3);
+      el.textContent = Math.round(e * target);
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function fadeIn(el) {
+    el.style.transition = 'opacity .4s cubic-bezier(0.4,0,0.2,1)';
+    el.style.opacity = '1';
+  }
+
+  function resetUI() {
+    const ring = document.getElementById('ringProgress');
+    ring.style.strokeDashoffset = C;
+    ring.style.stroke = '#E24B4A';
+    document.getElementById('ringNum').textContent = '0';
+    document.getElementById('classify').style.opacity = '0';
+    document.getElementById('tierName').textContent = '—';
+    document.getElementById('tierName').style.color = '';
+    document.getElementById('intentVal').textContent = '—';
+    document.getElementById('urgencyVal').textContent = '—';
+    document.getElementById('intentCard').style.opacity = '0';
+    document.getElementById('urgencyCard').style.opacity = '0';
+    document.getElementById('trace').textContent = '';
+    const ec = document.getElementById('emailCard');
+    ec.style.display = 'none';
+    ec.style.opacity = '0';
+    ec.style.transition = '';
+    document.getElementById('emailBody').textContent = '';
+  }
+
+  document.getElementById('leadForm').addEventListener('submit', async e => {
+    e.preventDefault();
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Analyzing…';
+
+    // Build payload — strip empty optional fields
+    const raw   = Object.fromEntries(new FormData(e.target));
+    const body  = Object.fromEntries(Object.entries(raw).filter(([, v]) => v !== ''));
+
+    // Show result section, reset any previous run
+    const results = document.getElementById('results');
+    results.style.display = 'block';
+    resetUI();
+    results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    const trace = document.getElementById('trace');
+
+    // Fire fetch + reasoning trace simultaneously; wait for both
+    const fetchP = fetch('/leads', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(body),
+    });
+    const traceP = typeLines(trace, WAIT_LINES, 14, 150);
+
+    let res, data;
+    try {
+      [res] = await Promise.all([fetchP, traceP]);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `HTTP ${res.status}`);
+      }
+      data = await res.json();
+    } catch (err) {
+      trace.textContent += `\n✗ ${err.message}`;
+      btn.disabled = false;
+      btn.textContent = 'Analyze again →';
+      return;
+    }
+
+    // Stream actual summary sentences into the trace
+    trace.textContent += '\n';
+    const sentences = data.summary.match(/[^.!?]*[.!?]+(?:\s|$)/g) || [data.summary];
+    await typeLines(trace, sentences.map(s => s.trim()), 10, 90);
+
+    // Score ring + counter (non-blocking, run over 1.6s)
+    const color = TIER_COLOR[data.score] || '#666';
+    animateRing(document.getElementById('ringProgress'), data.lead_score, color, 1600);
+    animateCount(document.getElementById('ringNum'), data.lead_score, 1600);
+
+    // 900ms in: reveal classification
+    await sleep(900);
+    document.getElementById('tierName').textContent = data.score;
+    document.getElementById('tierName').style.color = color;
+    fadeIn(document.getElementById('classify'));
+
+    // Intent stat (200ms later)
+    const intent   = deriveIntent(data.lead_score);
+    await sleep(200);
+    document.getElementById('intentVal').textContent = intent.label;
+    document.getElementById('intentVal').style.color = intent.color;
+    fadeIn(document.getElementById('intentCard'));
+
+    // Urgency stat (200ms later)
+    const urgency  = deriveUrgency(body.message || '');
+    await sleep(200);
+    document.getElementById('urgencyVal').textContent = urgency.label;
+    document.getElementById('urgencyVal').style.color = urgency.color;
+    fadeIn(document.getElementById('urgencyCard'));
+
+    // 500ms later: email card fades in
+    await sleep(500);
+    const ec = document.getElementById('emailCard');
+    ec.style.display = 'block';
+    ec.getBoundingClientRect(); // force reflow before transition
+    fadeIn(ec);
+
+    // Stream email text
+    await typeText(document.getElementById('emailBody'), data.email_draft, 18);
+
+    window._draft = data.email_draft;
+    btn.disabled = false;
+    btn.textContent = 'Analyze again →';
+  });
+
+  // Copy button
+  document.getElementById('copyBtn').addEventListener('click', async () => {
+    const text = window._draft;
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // Clipboard API blocked — fallback
+      const ta = Object.assign(document.createElement('textarea'), {
+        value: text, style: 'position:fixed;opacity:0'
+      });
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    const btn = document.getElementById('copyBtn');
+    const prev = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.style.color = '#10B981';
+    setTimeout(() => { btn.textContent = prev; btn.style.color = ''; }, 1800);
+  });
+</script>
+</body>
+</html>
