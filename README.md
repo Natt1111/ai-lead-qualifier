@@ -4,6 +4,8 @@ AI-powered lead qualification system that scores buying intent and drafts person
 
 **Stack:** Python · FastAPI · Claude Sonnet 4.5 · Airtable
 
+🔗 **Live demo:** [ai-lead-qualifier-production.up.railway.app](https://ai-lead-qualifier-production.up.railway.app)
+
 ---
 
 ## ✨ What it does
